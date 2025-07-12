@@ -2,7 +2,7 @@
 
 A full-stack mobile application built with React Native (Expo) and Node.js/Express, designed to help users track their personal goals, build positive habits, and maintain a daily journal for self-improvement.
 
-## 🚀 Features
+## Features
 
 - **User Authentication**: Secure login and registration system
 - **Goal Management**: Create, track, and complete personal goals
@@ -27,9 +27,9 @@ A full-stack mobile application built with React Native (Expo) and Node.js/Expre
 - **bcryptjs** for password hashing
 - **CORS** for cross-origin requests
 
-## 📱 Screenshots
+##  Screenshots
 
-*Screenshots will be added here*
+*Screenshots will be added soon*
 
 ## 🏗 Project Structure
 
@@ -51,7 +51,7 @@ EvolveMeApp/
 └── README.md
 ```
 
-## 🚀 Getting Started
+##  Getting Started
 
 ### Prerequisites
 
@@ -101,7 +101,7 @@ EvolveMeApp/
    npm start
    ```
 
-## 📋 API Endpoints
+##  API Endpoints
 
 ### Authentication
 - `POST /api/auth/register` - User registration
@@ -127,7 +127,7 @@ EvolveMeApp/
 - `PUT /api/journal/:id` - Update journal entry (protected)
 - `DELETE /api/journal/:id` - Delete journal entry (protected)
 
-## 🔧 Development
+##  Development
 
 ### Running in Development Mode
 ```bash
@@ -147,7 +147,7 @@ cd frontend
 expo build:android  # or expo build:ios
 ```
 
-## 📝 Environment Variables
+##  Environment Variables
 
 ### Backend (.env)
 ```env
@@ -157,7 +157,7 @@ PORT=5000
 NODE_ENV=development
 ```
 
-## 🤝 Contributing
+##  Contributing
 
 1. Fork the project
 2. Create your feature branch (`git checkout -b feature/AmazingFeature`)
@@ -165,26 +165,26 @@ NODE_ENV=development
 4. Push to the branch (`git push origin feature/AmazingFeature`)
 5. Open a Pull Request
 
-## 📄 License
+##  License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
-## 👨‍💻 Author
+##  Author
 
 **Kerim Akkis**
 - GitHub: [@kerimakkis](https://github.com/kerimakkis)
 
-## 🙏 Acknowledgments
+##  Acknowledgments
 
 - React Native community
 - Expo team for the amazing development tools
 - MongoDB for the database solution
 - All contributors and supporters
 
-## 📞 Support
+##  Support
 
-If you have any questions or need help, please open an issue on GitHub or contact the development team.
+If you have any questions or need help, please open an issue on GitHub or contact the developer.
 
 ---
 
-**Made with ❤️ for personal growth and development** 
+**Made with AI for personal growth and development** 
