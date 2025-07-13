@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import { 
   View, 
   Text, 
@@ -11,17 +11,33 @@ import {
   Modal,
   TextInput
 } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect } from '@react-navigation/native';
 import apiClient from '../api/client';
 import HabitItem from '../components/HabitItem';
+import LogoutButton from '../components/LogoutButton';
+import { showToast, toastMessages } from '../utils/toastUtils';
 
-const HabitsScreen = ({ navigation }) => {
+const HabitsScreen = ({ navigation, route }) => {
   const [habits, setHabits] = useState([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [showAddModal, setShowAddModal] = useState(false);
   const [newHabitTitle, setNewHabitTitle] = useState('');
   const [addingHabit, setAddingHabit] = useState(false);
+  
+  // Check if we're in edit mode
+  const isEditing = route?.params?.isEditing;
+  const habitId = route?.params?.habitId;
+  const habitTitle = route?.params?.title;
+
+  // Load existing habit data if editing
+  useEffect(() => {
+    if (isEditing && habitTitle) {
+      setNewHabitTitle(habitTitle);
+      setShowAddModal(true);
+    }
+  }, [isEditing, habitTitle]);
 
   const fetchHabits = async () => {
     try {
@@ -53,60 +69,86 @@ const HabitsScreen = ({ navigation }) => {
       await apiClient.post(`/habits/${habitId}/complete`);
       // Refresh the habits list to show updated completion status
       fetchHabits();
+      toastMessages.habitCompleted();
     } catch (error) {
       console.error('Failed to complete habit:', error);
       const errorMessage = error.response?.data?.msg || 'Failed to complete habit';
-      Alert.alert('Error', errorMessage);
+      toastMessages.habitCompleteError(errorMessage);
     }
   };
 
   const handleAddHabit = async () => {
     if (!newHabitTitle.trim()) {
-      Alert.alert('Error', 'Please enter a habit title');
+      toastMessages.validationError('habit title');
       return;
     }
 
     setAddingHabit(true);
     try {
-      await apiClient.post('/habits', {
-        title: newHabitTitle.trim()
-      });
-      
-      setNewHabitTitle('');
-      setShowAddModal(false);
-      fetchHabits(); // Refresh the list
-      Alert.alert('Success', 'Habit created successfully!');
+      if (isEditing && habitId) {
+        // Update existing habit
+        await apiClient.put(`/habits/${habitId}`, {
+          title: newHabitTitle.trim()
+        });
+        
+        setNewHabitTitle('');
+        setShowAddModal(false);
+        fetchHabits(); // Refresh the list
+        toastMessages.habitUpdated();
+        // Clear edit mode after successful update
+        navigation.setParams({ isEditing: false, habitId: null, title: null });
+      } else {
+        // Create new habit
+        await apiClient.post('/habits', {
+          title: newHabitTitle.trim()
+        });
+        
+        setNewHabitTitle('');
+        setShowAddModal(false);
+        fetchHabits(); // Refresh the list
+        toastMessages.habitCreated();
+      }
     } catch (error) {
-      console.error('Failed to create habit:', error);
-      const errorMessage = error.response?.data?.msg || 'Failed to create habit';
-      Alert.alert('Error', errorMessage);
+      console.error('Failed to save habit:', error);
+      const errorMessage = error.response?.data?.msg || 'Failed to save habit';
+      if (isEditing) {
+        toastMessages.habitUpdateError(errorMessage);
+      } else {
+        toastMessages.habitCreateError(errorMessage);
+      }
     } finally {
       setAddingHabit(false);
     }
   };
 
   const handleDeleteHabit = (habitId) => {
-    Alert.alert(
+    console.log('Attempting to delete habit with ID:', habitId);
+    
+    // Toast confirmation dialog
+    showToast.confirm(
       'Delete Habit',
       'Are you sure you want to delete this habit? This action cannot be undone.',
-      [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Delete',
-          style: 'destructive',
-          onPress: async () => {
-            try {
-              await apiClient.delete(`/habits/${habitId}`);
-              fetchHabits(); // Refresh the list
-              Alert.alert('Success', 'Habit deleted successfully');
-            } catch (error) {
-              console.error('Failed to delete habit:', error);
-              Alert.alert('Error', 'Failed to delete habit');
-            }
-          }
-        }
-      ]
+      () => {
+        console.log('Delete confirmed for habit:', habitId);
+        deleteHabit(habitId);
+      },
+      () => {
+        console.log('Delete cancelled for habit:', habitId);
+      }
     );
+  };
+
+  const deleteHabit = async (habitId) => {
+    try {
+      const response = await apiClient.delete(`/habits/${habitId}`);
+      console.log('Delete response:', response);
+      fetchHabits(); // Refresh the list
+      toastMessages.habitDeleted();
+    } catch (error) {
+      console.error('Failed to delete habit:', error);
+      console.error('Error response:', error.response?.data);
+      toastMessages.habitDeleteError(error.response?.data?.msg || error.message);
+    }
   };
 
   const renderHabitItem = ({ item }) => (
@@ -129,8 +171,20 @@ const HabitsScreen = ({ navigation }) => {
   return (
     <View style={styles.container}>
       <View style={styles.header}>
-        <Text style={styles.title}>My Habits</Text>
-        <Text style={styles.subtitle}>Build positive daily routines</Text>
+        <View>
+          <Text style={styles.title}>My Habits</Text>
+          <Text style={styles.subtitle}>Build positive daily routines</Text>
+        </View>
+        <View style={styles.headerActions}>
+          <TouchableOpacity 
+            style={styles.dashboardButton}
+            onPress={() => navigation.navigate('Dashboard')}
+          >
+            <Ionicons name="home-outline" size={20} color="white" />
+            <Text style={styles.dashboardButtonText}>Dashboard</Text>
+          </TouchableOpacity>
+          <LogoutButton style={styles.logoutButton} />
+        </View>
       </View>
 
       <FlatList
@@ -164,7 +218,7 @@ const HabitsScreen = ({ navigation }) => {
         <Text style={styles.fabText}>+</Text>
       </TouchableOpacity>
 
-      {/* Add Habit Modal */}
+      {/* Add/Edit Habit Modal */}
       <Modal
         visible={showAddModal}
         animationType="slide"
@@ -173,9 +227,9 @@ const HabitsScreen = ({ navigation }) => {
       >
         <View style={styles.modalOverlay}>
           <View style={styles.modalContent}>
-            <Text style={styles.modalTitle}>Add New Habit</Text>
+            <Text style={styles.modalTitle}>{isEditing ? 'Edit Habit' : 'Add New Habit'}</Text>
             <Text style={styles.modalSubtitle}>
-              What positive habit would you like to build?
+              {isEditing ? 'Update your habit details' : 'What positive habit would you like to build?'}
             </Text>
 
             <TextInput
@@ -193,6 +247,10 @@ const HabitsScreen = ({ navigation }) => {
                 onPress={() => {
                   setShowAddModal(false);
                   setNewHabitTitle('');
+                  // Clear edit mode when canceling
+                  if (isEditing) {
+                    navigation.setParams({ isEditing: false, habitId: null, title: null });
+                  }
                 }}
                 disabled={addingHabit}
               >
@@ -207,7 +265,7 @@ const HabitsScreen = ({ navigation }) => {
                 {addingHabit ? (
                   <ActivityIndicator color="white" size="small" />
                 ) : (
-                  <Text style={styles.modalAddText}>Add Habit</Text>
+                  <Text style={styles.modalAddText}>{isEditing ? 'Update Habit' : 'Add Habit'}</Text>
                 )}
               </TouchableOpacity>
             </View>
@@ -238,6 +296,31 @@ const styles = StyleSheet.create({
     padding: 20,
     paddingTop: 40,
     backgroundColor: '#007AFF',
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
+  },
+  headerActions: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+  },
+  dashboardButton: {
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 20,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+  },
+  dashboardButtonText: {
+    color: 'white',
+    fontSize: 14,
+    fontWeight: '600',
+  },
+  logoutButton: {
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
   },
   title: {
     fontSize: 28,
@@ -292,10 +375,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     elevation: 8,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 4,
+    boxShadow: '0px 4px 4px rgba(0, 0, 0, 0.3)',
   },
   fabText: {
     color: 'white',

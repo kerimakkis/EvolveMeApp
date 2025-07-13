@@ -2,6 +2,7 @@ import React, { useState, useContext } from 'react';
 import { View, TextInput, Button, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import apiClient from '../api/client';
 import { AuthContext } from '../context/AuthContext';
+import { toastMessages } from '../utils/toastUtils';
 
 const LoginScreen = ({ navigation }) => {
   const [email, setEmail] = useState('');
@@ -11,21 +12,22 @@ const LoginScreen = ({ navigation }) => {
 
   const handleLogin = async () => {
     if (!email || !password) {
-        setError('Please fill in all fields.');
+        toastMessages.validationError('all fields');
         return;
     }
     try {
       const response = await apiClient.post('/auth/login', { email, password });
       login(response.data.token);
+      toastMessages.loginSuccess();
     } catch (err) {
-      setError(err.response?.data?.msg || 'Login failed. Please check your credentials.');
+      const errorMsg = err.response?.data?.msg || 'Login failed. Please check your credentials.';
+      toastMessages.loginError(errorMsg);
     }
   };
 
   return (
     <View style={styles.container}>
       <Text style={styles.title}>Welcome Back!</Text>
-      {error ? <Text style={styles.error}>{error}</Text> : null}
       <TextInput placeholder="Email" value={email} onChangeText={setEmail} style={styles.input} autoCapitalize="none" keyboardType="email-address" />
       <TextInput placeholder="Password" value={password} onChangeText={setPassword} style={styles.input} secureTextEntry />
       <Button title="Login" onPress={handleLogin} />

@@ -1,7 +1,12 @@
 import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 
 const HabitItem = ({ habit, onComplete, onDelete }) => {
+  const handleDelete = () => {
+    console.log('Delete button pressed for habit:', habit._id);
+    onDelete && onDelete(habit._id);
+  };
   const isCompletedToday = () => {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
@@ -119,9 +124,9 @@ const HabitItem = ({ habit, onComplete, onDelete }) => {
 
         <TouchableOpacity
           style={styles.deleteButton}
-          onPress={onDelete}
+          onPress={handleDelete}
         >
-          <Text style={styles.deleteButtonText}>Delete</Text>
+          <Ionicons name="trash-outline" size={18} color="white" />
         </TouchableOpacity>
       </View>
     </View>
@@ -135,10 +140,7 @@ const styles = StyleSheet.create({
     marginVertical: 8,
     marginHorizontal: 16,
     borderRadius: 12,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
+    boxShadow: '0px 2px 4px rgba(0, 0, 0, 0.1)',
     elevation: 3,
   },
   header: {
@@ -207,14 +209,10 @@ const styles = StyleSheet.create({
   deleteButton: {
     backgroundColor: '#FF3B30',
     paddingVertical: 12,
-    paddingHorizontal: 20,
+    paddingHorizontal: 12,
     borderRadius: 8,
     alignItems: 'center',
-  },
-  deleteButtonText: {
-    color: 'white',
-    fontSize: 14,
-    fontWeight: '600',
+    justifyContent: 'center',
   },
 });
 

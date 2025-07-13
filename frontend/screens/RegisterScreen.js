@@ -2,6 +2,7 @@ import React, { useState, useContext } from 'react';
 import { View, TextInput, Button, Text, StyleSheet, TouchableOpacity, ScrollView, Alert } from 'react-native';
 import apiClient from '../api/client';
 import { AuthContext } from '../context/AuthContext';
+import { toastMessages } from '../utils/toastUtils';
 
 const RegisterScreen = ({ navigation }) => {
   const [name, setName] = useState('');
@@ -14,23 +15,23 @@ const RegisterScreen = ({ navigation }) => {
 
   const validateForm = () => {
     if (!name.trim() || !email.trim() || !password || !confirmPassword) {
-      setError('Please fill in all fields.');
+      toastMessages.validationError('all fields');
       return false;
     }
 
     if (password.length < 6) {
-      setError('Password must be at least 6 characters long.');
+      showToast.warning('Validation Error', 'Password must be at least 6 characters long.');
       return false;
     }
 
     if (password !== confirmPassword) {
-      setError('Passwords do not match.');
+      showToast.warning('Validation Error', 'Passwords do not match.');
       return false;
     }
 
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(email)) {
-      setError('Please enter a valid email address.');
+      showToast.warning('Validation Error', 'Please enter a valid email address.');
       return false;
     }
 
@@ -41,7 +42,6 @@ const RegisterScreen = ({ navigation }) => {
     if (!validateForm()) return;
 
     setIsLoading(true);
-    setError('');
 
     try {
       const response = await apiClient.post('/auth/register', {
@@ -52,10 +52,10 @@ const RegisterScreen = ({ navigation }) => {
 
       // Auto-login after successful registration
       await login(response.data.token);
-      Alert.alert('Success', 'Account created successfully! Welcome to EvolveMe!');
+      toastMessages.registerSuccess();
     } catch (err) {
       const errorMessage = err.response?.data?.msg || 'Registration failed. Please try again.';
-      setError(errorMessage);
+      toastMessages.registerError(errorMessage);
     } finally {
       setIsLoading(false);
     }
@@ -67,7 +67,7 @@ const RegisterScreen = ({ navigation }) => {
         <Text style={styles.title}>Create Account</Text>
         <Text style={styles.subtitle}>Start your personal growth journey today</Text>
         
-        {error ? <Text style={styles.error}>{error}</Text> : null}
+
         
         <TextInput
           placeholder="Full Name"

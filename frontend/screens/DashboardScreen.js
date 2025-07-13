@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useContext } from 'react';
 import { 
   View, 
   Text, 
@@ -10,6 +10,10 @@ import {
   Alert 
 } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
+import { Ionicons } from '@expo/vector-icons';
+import { AuthContext } from '../context/AuthContext';
+import LogoutButton from '../components/LogoutButton';
+import { showToast, toastMessages } from '../utils/toastUtils';
 import apiClient from '../api/client';
 
 const DashboardScreen = ({ navigation }) => {
@@ -93,6 +97,91 @@ const DashboardScreen = ({ navigation }) => {
     return Math.round((stats.completedHabitsToday / stats.totalHabits) * 100);
   };
 
+  const handleUpdateGoal = (goal) => {
+    navigation.navigate('Goals', { 
+      screen: 'AddGoal', 
+      params: { 
+        goalId: goal._id,
+        title: goal.title,
+        description: goal.description,
+        isEditing: true 
+      }
+    });
+  };
+
+  const handleDeleteGoal = (goalId) => {
+    console.log('Dashboard: Attempting to delete goal with ID:', goalId);
+    
+    // Toast confirmation dialog
+    showToast.confirm(
+      'Delete Goal',
+      'Are you sure you want to delete this goal?',
+      () => {
+        console.log('Dashboard: Delete confirmed for goal:', goalId);
+        deleteGoal(goalId);
+      },
+      () => {
+        console.log('Dashboard: Delete cancelled for goal:', goalId);
+      }
+    );
+  };
+
+  const deleteGoal = async (goalId) => {
+    try {
+      console.log('Dashboard: Making DELETE request to:', `/goals/${goalId}`);
+      const response = await apiClient.delete(`/goals/${goalId}`);
+      console.log('Dashboard: Delete goal response:', response);
+      fetchDashboardData(); // Refresh data
+      toastMessages.goalDeleted();
+    } catch (error) {
+      console.error('Dashboard: Failed to delete goal:', error);
+      console.error('Dashboard: Error response:', error.response?.data);
+      console.error('Dashboard: Error status:', error.response?.status);
+      toastMessages.goalDeleteError(error.response?.data?.msg || error.message);
+    }
+  };
+
+  const handleUpdateHabit = (habit) => {
+    // Navigate to habits screen with edit mode
+    navigation.navigate('Habits', { 
+      habitId: habit._id,
+      title: habit.title,
+      isEditing: true 
+    });
+  };
+
+  const handleDeleteHabit = (habitId) => {
+    console.log('Dashboard: Attempting to delete habit with ID:', habitId);
+    
+    // Toast confirmation dialog
+    showToast.confirm(
+      'Delete Habit',
+      'Are you sure you want to delete this habit?',
+      () => {
+        console.log('Dashboard: Delete confirmed for habit:', habitId);
+        deleteHabit(habitId);
+      },
+      () => {
+        console.log('Dashboard: Delete cancelled for habit:', habitId);
+      }
+    );
+  };
+
+  const deleteHabit = async (habitId) => {
+    try {
+      const response = await apiClient.delete(`/habits/${habitId}`);
+      console.log('Dashboard: Delete response:', response);
+      fetchDashboardData(); // Refresh data
+      toastMessages.habitDeleted();
+    } catch (error) {
+      console.error('Dashboard: Failed to delete habit:', error);
+      console.error('Dashboard: Error response:', error.response?.data);
+      toastMessages.habitDeleteError(error.response?.data?.msg || error.message);
+    }
+  };
+
+
+
   if (loading) {
     return (
       <View style={styles.loadingContainer}>
@@ -103,15 +192,20 @@ const DashboardScreen = ({ navigation }) => {
   }
 
   return (
-    <ScrollView 
-      style={styles.container}
-      refreshControl={
-        <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
-      }
-    >
+    <View style={styles.container}>
+      <ScrollView 
+        refreshControl={
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+        }
+      >
       <View style={styles.header}>
-        <Text style={styles.title}>Dashboard</Text>
-        <Text style={styles.subtitle}>Your personal growth overview</Text>
+        <View style={styles.headerTop}>
+          <View>
+            <Text style={styles.title}>Dashboard</Text>
+            <Text style={styles.subtitle}>Your personal growth overview</Text>
+          </View>
+          <LogoutButton />
+        </View>
       </View>
 
       {/* Stats Cards */}
@@ -161,9 +255,25 @@ const DashboardScreen = ({ navigation }) => {
         {recentGoals.length > 0 ? (
           recentGoals.map((goal) => (
             <View key={goal._id} style={styles.itemCard}>
-              <Text style={[styles.itemTitle, goal.isCompleted && styles.completedText]}>
-                {goal.title}
-              </Text>
+              <View style={styles.itemHeader}>
+                <Text style={[styles.itemTitle, goal.isCompleted && styles.completedText]}>
+                  {goal.title}
+                </Text>
+                <View style={styles.itemActions}>
+                  <TouchableOpacity 
+                    style={styles.actionIcon}
+                    onPress={() => handleUpdateGoal(goal)}
+                  >
+                    <Ionicons name="create-outline" size={20} color="#007AFF" />
+                  </TouchableOpacity>
+                  <TouchableOpacity 
+                    style={styles.actionIcon}
+                    onPress={() => handleDeleteGoal(goal._id)}
+                  >
+                    <Ionicons name="trash-outline" size={20} color="#FF3B30" />
+                  </TouchableOpacity>
+                </View>
+              </View>
               {goal.description && (
                 <Text style={styles.itemDescription}>{goal.description}</Text>
               )}
@@ -189,7 +299,23 @@ const DashboardScreen = ({ navigation }) => {
         {recentHabits.length > 0 ? (
           recentHabits.map((habit) => (
             <View key={habit._id} style={styles.itemCard}>
-              <Text style={styles.itemTitle}>{habit.title}</Text>
+              <View style={styles.itemHeader}>
+                <Text style={styles.itemTitle}>{habit.title}</Text>
+                <View style={styles.itemActions}>
+                  <TouchableOpacity 
+                    style={styles.actionIcon}
+                    onPress={() => handleUpdateHabit(habit)}
+                  >
+                    <Ionicons name="create-outline" size={20} color="#007AFF" />
+                  </TouchableOpacity>
+                  <TouchableOpacity 
+                    style={styles.actionIcon}
+                    onPress={() => handleDeleteHabit(habit._id)}
+                  >
+                    <Ionicons name="trash-outline" size={20} color="#FF3B30" />
+                  </TouchableOpacity>
+                </View>
+              </View>
               <Text style={styles.itemSubtext}>
                 {habit.completedDates.length} times completed
               </Text>
@@ -204,7 +330,10 @@ const DashboardScreen = ({ navigation }) => {
       </View>
 
       <View style={styles.bottomSpacing} />
-    </ScrollView>
+      </ScrollView>
+
+      {/* FAB butonunu kaldırdım */}
+    </View>
   );
 };
 
@@ -229,6 +358,13 @@ const styles = StyleSheet.create({
     paddingTop: 40,
     backgroundColor: '#007AFF',
   },
+  headerTop: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
+  },
+
+
   title: {
     fontSize: 28,
     fontWeight: 'bold',
@@ -250,10 +386,7 @@ const styles = StyleSheet.create({
     padding: 20,
     borderRadius: 12,
     marginHorizontal: 5,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
+    boxShadow: '0px 2px 4px rgba(0, 0, 0, 0.1)',
     elevation: 3,
   },
   statNumber: {
@@ -315,17 +448,30 @@ const styles = StyleSheet.create({
     padding: 15,
     borderRadius: 10,
     marginBottom: 10,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.05,
-    shadowRadius: 2,
+    boxShadow: '0px 1px 2px rgba(0, 0, 0, 0.05)',
     elevation: 2,
+  },
+  itemHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
+    marginBottom: 5,
   },
   itemTitle: {
     fontSize: 16,
     fontWeight: '600',
     color: '#333',
-    marginBottom: 5,
+    flex: 1,
+    marginRight: 10,
+  },
+  itemActions: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  actionIcon: {
+    padding: 8,
+    marginLeft: 8,
+    borderRadius: 4,
   },
   completedText: {
     textDecorationLine: 'line-through',
@@ -354,6 +500,24 @@ const styles = StyleSheet.create({
   },
   bottomSpacing: {
     height: 20,
+  },
+  fab: {
+    position: 'absolute',
+    bottom: 30,
+    right: 30,
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    backgroundColor: '#007AFF',
+    justifyContent: 'center',
+    alignItems: 'center',
+    elevation: 8,
+    boxShadow: '0px 4px 4px rgba(0, 0, 0, 0.3)',
+  },
+  fabText: {
+    color: 'white',
+    fontSize: 24,
+    fontWeight: 'bold',
   },
 });
 

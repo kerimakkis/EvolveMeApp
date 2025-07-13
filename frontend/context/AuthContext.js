@@ -15,10 +15,15 @@ export const AuthProvider = ({ children }) => {
   };
 
   const logout = async () => {
-    setIsLoading(true);
-    setToken(null);
-    await AsyncStorage.removeItem('token');
-    setIsLoading(false);
+    try {
+      setIsLoading(true);
+      setToken(null);
+      await AsyncStorage.removeItem('token');
+      setIsLoading(false);
+    } catch (error) {
+      console.error('Error during logout:', error);
+      setIsLoading(false);
+    }
   };
 
   const isLoggedIn = async () => {

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   View, 
   Text, 
@@ -9,20 +9,34 @@ import {
   Alert,
   ActivityIndicator 
 } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import apiClient from '../api/client';
+import { showToast, toastMessages } from '../utils/toastUtils';
 
-const AddGoalScreen = ({ navigation }) => {
+const AddGoalScreen = ({ navigation, route }) => {
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  
+  // Check if we're in edit mode
+  const isEditing = route?.params?.isEditing;
+  const goalId = route?.params?.goalId;
+
+  // Load existing goal data if editing
+  useEffect(() => {
+    if (isEditing && route?.params?.title) {
+      setTitle(route.params.title);
+      setDescription(route.params.description || '');
+    }
+  }, [isEditing, route?.params]);
 
   const validateForm = () => {
     if (!title.trim()) {
-      Alert.alert('Error', 'Please enter a goal title');
+      toastMessages.validationError('goal title');
       return false;
     }
     if (title.trim().length < 3) {
-      Alert.alert('Error', 'Goal title must be at least 3 characters long');
+      showToast.warning('Validation Error', 'Goal title must be at least 3 characters long');
       return false;
     }
     return true;
@@ -34,25 +48,33 @@ const AddGoalScreen = ({ navigation }) => {
     setIsLoading(true);
 
     try {
-      await apiClient.post('/goals', {
-        title: title.trim(),
-        description: description.trim() || undefined
-      });
+      if (isEditing && goalId) {
+        // Update existing goal
+        await apiClient.put(`/goals/${goalId}`, {
+          title: title.trim(),
+          description: description.trim() || undefined
+        });
 
-      Alert.alert(
-        'Success', 
-        'Goal created successfully!',
-        [
-          {
-            text: 'OK',
-            onPress: () => navigation.goBack()
-          }
-        ]
-      );
+        toastMessages.goalUpdated();
+        setTimeout(() => navigation.goBack(), 1500);
+      } else {
+        // Create new goal
+        await apiClient.post('/goals', {
+          title: title.trim(),
+          description: description.trim() || undefined
+        });
+
+        toastMessages.goalCreated();
+        setTimeout(() => navigation.goBack(), 1500);
+      }
     } catch (error) {
-      console.error('Failed to create goal:', error);
-      const errorMessage = error.response?.data?.msg || 'Failed to create goal. Please try again.';
-      Alert.alert('Error', errorMessage);
+      console.error('Failed to save goal:', error);
+      const errorMessage = error.response?.data?.msg || 'Failed to save goal. Please try again.';
+      if (isEditing) {
+        toastMessages.goalUpdateError(errorMessage);
+      } else {
+        toastMessages.goalCreateError(errorMessage);
+      }
     } finally {
       setIsLoading(false);
     }
@@ -60,20 +82,11 @@ const AddGoalScreen = ({ navigation }) => {
 
   const handleCancel = () => {
     if (title.trim() || description.trim()) {
-      Alert.alert(
+      showToast.confirm(
         'Discard Changes',
         'Are you sure you want to discard your changes?',
-        [
-          {
-            text: 'Cancel',
-            style: 'cancel'
-          },
-          {
-            text: 'Discard',
-            style: 'destructive',
-            onPress: () => navigation.goBack()
-          }
-        ]
+        () => navigation.goBack(),
+        () => {} // Do nothing on cancel
       );
     } else {
       navigation.goBack();
@@ -83,8 +96,21 @@ const AddGoalScreen = ({ navigation }) => {
   return (
     <ScrollView style={styles.container}>
       <View style={styles.content}>
-        <Text style={styles.title}>Add New Goal</Text>
-        <Text style={styles.subtitle}>Set a clear, achievable goal for yourself</Text>
+        <View style={styles.header}>
+          <View>
+            <Text style={styles.title}>{isEditing ? 'Edit Goal' : 'Add New Goal'}</Text>
+            <Text style={styles.subtitle}>
+              {isEditing ? 'Update your goal details' : 'Set a clear, achievable goal for yourself'}
+            </Text>
+          </View>
+          <TouchableOpacity 
+            style={styles.dashboardButton}
+            onPress={() => navigation.navigate('Dashboard')}
+          >
+            <Ionicons name="home-outline" size={20} color="white" />
+            <Text style={styles.dashboardButtonText}>Dashboard</Text>
+          </TouchableOpacity>
+        </View>
 
         <View style={styles.form}>
           <View style={styles.inputGroup}>
@@ -141,7 +167,7 @@ const AddGoalScreen = ({ navigation }) => {
             {isLoading ? (
               <ActivityIndicator color="white" size="small" />
             ) : (
-              <Text style={styles.submitButtonText}>Create Goal</Text>
+              <Text style={styles.submitButtonText}>{isEditing ? 'Update Goal' : 'Create Goal'}</Text>
             )}
           </TouchableOpacity>
         </View>
@@ -159,28 +185,44 @@ const styles = StyleSheet.create({
     padding: 20,
     paddingTop: 40,
   },
+  header: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
+    marginBottom: 20,
+  },
   title: {
     fontSize: 28,
     fontWeight: 'bold',
     color: '#333',
     marginBottom: 8,
-    textAlign: 'center',
+    flex: 1,
   },
   subtitle: {
     fontSize: 16,
     color: '#666',
-    textAlign: 'center',
     marginBottom: 30,
+  },
+  dashboardButton: {
+    backgroundColor: '#007AFF',
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 20,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+  },
+  dashboardButtonText: {
+    color: 'white',
+    fontSize: 14,
+    fontWeight: '600',
   },
   form: {
     backgroundColor: 'white',
     borderRadius: 12,
     padding: 20,
     marginBottom: 20,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
+    boxShadow: '0px 2px 4px rgba(0, 0, 0, 0.1)',
     elevation: 3,
   },
   inputGroup: {
