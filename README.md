@@ -2,14 +2,38 @@
 
 A full-stack mobile application built with React Native (Expo) and Node.js/Express, designed to help users track their personal goals, build positive habits, and maintain a daily journal for self-improvement.
 
+---
+
+## 🚀 What's New (2024)
+
+- **Feature Checklist:**
+  - [x] Modern Tab Bar (white background, shadow, meaningful icons)
+  - [x] FAB (Floating Action Button) removed from Dashboard
+  - [x] Toast Notification System (react-native-toast-message)
+  - [x] Goals & Habits Edit Mode with pre-filled forms
+  - [x] Consistent, modern UI/UX across all screens
+  - [x] Web Support & Port Management improvements
+  - [ ] Multi-language (i18n) Support (in progress)
+  - [ ] Animated Intro / Onboarding Screen (planned)
+  - [ ] Graphical Progress Tracking on Dashboard (e.g. Pie Chart) (planned)
+  - [ ] Celebration Animation (e.g. confetti) on Goal/Habit Completion (planned)
+  - [ ] History View for Completed Goals & Habits (planned)
+  - [ ] Share Progress: Share created/completed habits & goals and progress levels with others (planned)
+  - [ ] AI Integration: Smart suggestions, motivational messages, or analytics via AI API (planned)
+  - [ ] Google Sign-In: Login with Google account (planned)
+
+---
+
 ## Features
 
 - **User Authentication**: Secure login and registration system
-- **Goal Management**: Create, track, and complete personal goals
-- **Habit Tracking**: Build and monitor daily habits with streak tracking
+- **Goal Management**: Create, update, delete, and track personal goals
+- **Habit Tracking**: Build, update, delete, and monitor daily habits with streak tracking
 - **Journal Entries**: Daily mood and reflection tracking
 - **Dashboard**: Overview of progress and achievements
-- **Responsive Design**: Works on both iOS and Android
+- **Modern UI/UX**: Responsive, visually appealing, and consistent design
+- **Toast Notifications**: All user feedback via toast messages
+- **Responsive Design**: Works on iOS, Android, and Web
 
 ## 🛠 Tech Stack
 
