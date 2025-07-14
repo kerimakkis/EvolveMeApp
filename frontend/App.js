@@ -7,6 +7,7 @@ import AuthNavigator from './navigation/AuthNavigator';
 import Toast from 'react-native-toast-message';
 import { toastConfig } from './utils/toastConfig';
 import './utils/consoleUtils';
+import './config/i18n';
 
 // Error Boundary Component
 class ErrorBoundary extends React.Component {

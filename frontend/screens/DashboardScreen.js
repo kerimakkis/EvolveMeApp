@@ -11,12 +11,15 @@ import {
 } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
+import { useTranslation } from 'react-i18next';
 import { AuthContext } from '../context/AuthContext';
 import LogoutButton from '../components/LogoutButton';
+import LanguageSelector from '../components/LanguageSelector';
 import { showToast, toastMessages } from '../utils/toastUtils';
 import apiClient from '../api/client';
 
 const DashboardScreen = ({ navigation }) => {
+  const { t } = useTranslation();
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [stats, setStats] = useState({
@@ -186,7 +189,7 @@ const DashboardScreen = ({ navigation }) => {
     return (
       <View style={styles.loadingContainer}>
         <ActivityIndicator size="large" color="#007AFF" />
-        <Text style={styles.loadingText}>Loading your progress...</Text>
+        <Text style={styles.loadingText}>{t('common.loading_progress')}</Text>
       </View>
     );
   }
@@ -201,10 +204,13 @@ const DashboardScreen = ({ navigation }) => {
       <View style={styles.header}>
         <View style={styles.headerTop}>
           <View>
-            <Text style={styles.title}>Dashboard</Text>
-            <Text style={styles.subtitle}>Your personal growth overview</Text>
+            <Text style={styles.title}>{t('dashboard')}</Text>
+            <Text style={styles.subtitle}>{t('personal_growth_overview')}</Text>
           </View>
-          <LogoutButton />
+          <View style={styles.headerActions}>
+            <LanguageSelector />
+            <LogoutButton />
+          </View>
         </View>
       </View>
 
@@ -212,33 +218,33 @@ const DashboardScreen = ({ navigation }) => {
       <View style={styles.statsContainer}>
         <View style={styles.statCard}>
           <Text style={styles.statNumber}>{stats.totalGoals}</Text>
-          <Text style={styles.statLabel}>Total Goals</Text>
-          <Text style={styles.statSubtext}>{getCompletionRate()}% completed</Text>
+          <Text style={styles.statLabel}>{t('total_goals', { ns: 'goals' })}</Text>
+          <Text style={styles.statSubtext}>{getCompletionRate()}% {t('completed')}</Text>
         </View>
         
         <View style={styles.statCard}>
           <Text style={styles.statNumber}>{stats.totalHabits}</Text>
-          <Text style={styles.statLabel}>Active Habits</Text>
-          <Text style={styles.statSubtext}>{getHabitCompletionRate()}% today</Text>
+          <Text style={styles.statLabel}>{t('active_habits', { ns: 'habits' })}</Text>
+          <Text style={styles.statSubtext}>{getHabitCompletionRate()}% {t('today')}</Text>
         </View>
       </View>
 
       {/* Quick Actions */}
       <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Quick Actions</Text>
+        <Text style={styles.sectionTitle}>{t('quick_actions')}</Text>
         <View style={styles.actionButtons}>
           <TouchableOpacity 
             style={styles.actionButton}
             onPress={() => navigation.navigate('Goals', { screen: 'AddGoal' })}
           >
-            <Text style={styles.actionButtonText}>Add Goal</Text>
+            <Text style={styles.actionButtonText}>{t('add_goal', { ns: 'goals' })}</Text>
           </TouchableOpacity>
           
           <TouchableOpacity 
             style={styles.actionButton}
             onPress={() => navigation.navigate('Habits')}
           >
-            <Text style={styles.actionButtonText}>Add Habit</Text>
+            <Text style={styles.actionButtonText}>{t('add_habit', { ns: 'habits' })}</Text>
           </TouchableOpacity>
         </View>
       </View>
@@ -246,9 +252,9 @@ const DashboardScreen = ({ navigation }) => {
       {/* Recent Goals */}
       <View style={styles.section}>
         <View style={styles.sectionHeader}>
-          <Text style={styles.sectionTitle}>Recent Goals</Text>
+          <Text style={styles.sectionTitle}>{t('recent_goals', { ns: 'goals' })}</Text>
           <TouchableOpacity onPress={() => navigation.navigate('Goals')}>
-            <Text style={styles.seeAllText}>See All</Text>
+            <Text style={styles.seeAllText}>{t('see_all')}</Text>
           </TouchableOpacity>
         </View>
         
@@ -283,16 +289,16 @@ const DashboardScreen = ({ navigation }) => {
             </View>
           ))
         ) : (
-          <Text style={styles.emptyText}>No goals yet. Add your first goal!</Text>
+          <Text style={styles.emptyText}>{t('no_goals', { ns: 'goals' })}</Text>
         )}
       </View>
 
       {/* Recent Habits */}
       <View style={styles.section}>
         <View style={styles.sectionHeader}>
-          <Text style={styles.sectionTitle}>Recent Habits</Text>
+          <Text style={styles.sectionTitle}>{t('recent_habits', { ns: 'habits' })}</Text>
           <TouchableOpacity onPress={() => navigation.navigate('Habits')}>
-            <Text style={styles.seeAllText}>See All</Text>
+            <Text style={styles.seeAllText}>{t('see_all')}</Text>
           </TouchableOpacity>
         </View>
         
@@ -317,7 +323,7 @@ const DashboardScreen = ({ navigation }) => {
                 </View>
               </View>
               <Text style={styles.itemSubtext}>
-                {habit.completedDates.length} times completed
+                {habit.completedDates.length} {t('times_completed', { ns: 'habits' })}
               </Text>
               <Text style={styles.itemDate}>
                 {new Date(habit.createdAt).toLocaleDateString()}
@@ -325,7 +331,7 @@ const DashboardScreen = ({ navigation }) => {
             </View>
           ))
         ) : (
-          <Text style={styles.emptyText}>No habits yet. Start building good habits!</Text>
+          <Text style={styles.emptyText}>{t('no_habits', { ns: 'habits' })}</Text>
         )}
       </View>
 
@@ -362,6 +368,11 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'flex-start',
+  },
+  headerActions: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
   },
 
 

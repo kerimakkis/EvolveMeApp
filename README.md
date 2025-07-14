@@ -24,6 +24,49 @@ A full-stack mobile application built with React Native (Expo) and Node.js/Expre
 
 ---
 
+## 🌐 Multi-Language (i18n) Support
+
+EvolveMeApp now supports **multi-language (i18n)** for both backend and frontend!
+
+### Supported Languages
+- 🇬🇧 English
+- 🇩🇪 Deutsch (German)
+- 🇨🇳 中文 (Chinese)
+- 🏛️ Latina (Latin)
+- 🇹🇷 Türkçe (Turkish)
+
+### How it works
+- **Frontend:**
+  - All UI text is fully translatable and instantly switches language.
+  - Language can be changed at any time from the top right of the Dashboard screen (flag icon).
+  - Translations are managed with [react-i18next](https://react.i18next.com/).
+- **Backend:**
+  - All API responses and error messages are also translatable.
+  - Language is detected from request headers, query, or cookie.
+  - Translations are managed with [i18next](https://www.i18next.com/).
+
+### Example (Frontend)
+```js
+// Use translation in your components
+const { t } = useTranslation();
+<Text>{t('dashboard')}</Text>
+<Text>{t('add_goal', { ns: 'goals' })}</Text>
+```
+
+### Example (Backend)
+```js
+// Use translation in your controllers
+res.json({ message: req.t('auth.login_success') });
+```
+
+### Features
+- Instant language switching (no reload needed)
+- All UI and API messages are translatable
+- Language is remembered (localStorage/cookie)
+- Modern language selector with flags
+
+---
+
 ## Features
 
 - **User Authentication**: Secure login and registration system
