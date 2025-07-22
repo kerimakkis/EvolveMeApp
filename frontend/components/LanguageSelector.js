@@ -9,6 +9,7 @@ import {
 } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { Ionicons } from '@expo/vector-icons';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const LanguageSelector = () => {
   const { i18n, t } = useTranslation();
@@ -22,9 +23,17 @@ const LanguageSelector = () => {
     { code: 'tr', name: 'Turkish', nativeName: 'Türkçe', flag: '🇹🇷' },
   ];
 
-  const changeLanguage = (languageCode) => {
-    i18n.changeLanguage(languageCode);
-    setModalVisible(false);
+  const changeLanguage = async (languageCode) => {
+    try {
+      await AsyncStorage.setItem('userLanguage', languageCode);
+      i18n.changeLanguage(languageCode);
+      setModalVisible(false);
+    } catch (error) {
+      console.log('Error saving language preference:', error);
+      // Fallback: just change language without saving
+      i18n.changeLanguage(languageCode);
+      setModalVisible(false);
+    }
   };
 
   const currentLanguage = languages.find(lang => lang.code === i18n.language) || languages[0];

@@ -218,13 +218,13 @@ const DashboardScreen = ({ navigation }) => {
       <View style={styles.statsContainer}>
         <View style={styles.statCard}>
           <Text style={styles.statNumber}>{stats.totalGoals}</Text>
-          <Text style={styles.statLabel}>{t('total_goals', { ns: 'goals' })}</Text>
+          <Text style={styles.statLabel}>{t('total_goals')}</Text>
           <Text style={styles.statSubtext}>{getCompletionRate()}% {t('completed')}</Text>
         </View>
         
         <View style={styles.statCard}>
           <Text style={styles.statNumber}>{stats.totalHabits}</Text>
-          <Text style={styles.statLabel}>{t('active_habits', { ns: 'habits' })}</Text>
+          <Text style={styles.statLabel}>{t('active_habits')}</Text>
           <Text style={styles.statSubtext}>{getHabitCompletionRate()}% {t('today')}</Text>
         </View>
       </View>
@@ -252,7 +252,7 @@ const DashboardScreen = ({ navigation }) => {
       {/* Recent Goals */}
       <View style={styles.section}>
         <View style={styles.sectionHeader}>
-          <Text style={styles.sectionTitle}>{t('recent_goals', { ns: 'goals' })}</Text>
+          <Text style={styles.sectionTitle}>{t('recent_goals')}</Text>
           <TouchableOpacity onPress={() => navigation.navigate('Goals')}>
             <Text style={styles.seeAllText}>{t('see_all')}</Text>
           </TouchableOpacity>
@@ -296,7 +296,7 @@ const DashboardScreen = ({ navigation }) => {
       {/* Recent Habits */}
       <View style={styles.section}>
         <View style={styles.sectionHeader}>
-          <Text style={styles.sectionTitle}>{t('recent_habits', { ns: 'habits' })}</Text>
+          <Text style={styles.sectionTitle}>{t('recent_habits')}</Text>
           <TouchableOpacity onPress={() => navigation.navigate('Habits')}>
             <Text style={styles.seeAllText}>{t('see_all')}</Text>
           </TouchableOpacity>
@@ -323,7 +323,7 @@ const DashboardScreen = ({ navigation }) => {
                 </View>
               </View>
               <Text style={styles.itemSubtext}>
-                {habit.completedDates.length} {t('times_completed', { ns: 'habits' })}
+                {habit.completedDates.length} {t('times_completed')}
               </Text>
               <Text style={styles.itemDate}>
                 {new Date(habit.createdAt).toLocaleDateString()}
