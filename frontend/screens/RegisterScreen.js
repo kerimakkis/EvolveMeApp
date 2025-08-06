@@ -2,7 +2,7 @@ import React, { useState, useContext } from 'react';
 import { View, TextInput, Button, Text, StyleSheet, TouchableOpacity, ScrollView, Alert } from 'react-native';
 import apiClient from '../api/client';
 import { AuthContext } from '../context/AuthContext';
-import { toastMessages } from '../utils/toastUtils';
+import { toastMessages, showToast } from '../utils/toastUtils';
 
 const RegisterScreen = ({ navigation }) => {
   const [name, setName] = useState('');

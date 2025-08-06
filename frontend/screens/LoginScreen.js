@@ -32,19 +32,29 @@ const LoginScreen = ({ navigation }) => {
 
   return (
     <View style={{ flex: 1 }}>
-      <Video
-        ref={videoRef}
-        source={require('../assets/intro.mp4')}
-        style={[
-          styles.videoBg,
-          Platform.OS === 'web' && { objectFit: 'cover', position: 'fixed', width: '100vw', height: '100vh', minWidth: '100vw', minHeight: '100vh' }
-        ]}
-        resizeMode="cover"
-        shouldPlay
-        isLooping
-        isMuted
-        onError={e => console.log('Video error:', e)}
-      />
+      <View style={{ position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh', minWidth: '100vw', minHeight: '100vh', overflow: 'hidden', zIndex: -1 }}>
+        <Video
+          ref={videoRef}
+          source={require('../assets/intro.mp4')}
+          style={{
+            position: 'absolute',
+            top: 0,
+            left: 0,
+            width: '100vw',
+            height: '100vh',
+            minWidth: '100vw',
+            minHeight: '100vh',
+            objectFit: 'cover',
+            zIndex: -1,
+            backgroundColor: 'black',
+          }}
+          resizeMode="cover"
+          shouldPlay
+          isLooping
+          isMuted
+          onError={e => console.log('Video error:', e)}
+        />
+      </View>
       <View style={styles.overlay} />
       <View style={styles.container}>
         <Text style={styles.title}>{t('auth.welcome_back')}</Text>
@@ -79,8 +89,12 @@ const styles = StyleSheet.create({
     left: 0,
     width: '100%',
     height: '100%',
+    minWidth: '100vw',
+    minHeight: '100vh',
     zIndex: -1,
     backgroundColor: 'black',
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   container: {
     flex: 1,
