@@ -1,6 +1,6 @@
 import i18n from 'i18next';
 import { initReactI18next } from 'react-i18next';
-import LanguageDetector from 'i18next-browser-languagedetector';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 // Import translations
 import enCommon from '../locales/en/common.json';
@@ -72,7 +72,6 @@ const resources = {
 };
 
 i18n
-  .use(LanguageDetector)
   .use(initReactI18next)
   .init({
     resources,
@@ -81,12 +80,22 @@ i18n
     interpolation: {
       escapeValue: false,
     },
-    detection: {
-      order: ['localStorage', 'navigator', 'htmlTag'],
-      caches: ['localStorage'],
-    },
     defaultNS: 'common',
     ns: ['common', 'auth', 'goals', 'habits', 'journal'],
   });
+
+// React Native için dil algılama
+const getStoredLanguage = async () => {
+  try {
+    const storedLanguage = await AsyncStorage.getItem('userLanguage');
+    if (storedLanguage) {
+      i18n.changeLanguage(storedLanguage);
+    }
+  } catch (error) {
+    console.log('Error loading stored language:', error);
+  }
+};
+
+getStoredLanguage();
 
 export default i18n; 

@@ -7,11 +7,13 @@ import {
   TouchableOpacity, 
   ActivityIndicator,
   RefreshControl,
-  Alert 
+  Alert,
+  Dimensions 
 } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import { useTranslation } from 'react-i18next';
+import { ProgressChart } from 'react-native-chart-kit';
 import { AuthContext } from '../context/AuthContext';
 import LogoutButton from '../components/LogoutButton';
 import LanguageSelector from '../components/LanguageSelector';
@@ -20,6 +22,7 @@ import apiClient from '../api/client';
 
 const DashboardScreen = ({ navigation }) => {
   const { t } = useTranslation();
+  const { width } = Dimensions.get('window');
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [stats, setStats] = useState({
@@ -98,6 +101,74 @@ const DashboardScreen = ({ navigation }) => {
   const getHabitCompletionRate = () => {
     if (stats.totalHabits === 0) return 0;
     return Math.round((stats.completedHabitsToday / stats.totalHabits) * 100);
+  };
+
+  // Goals ProgressChart için veri hazırlama
+  const getGoalsProgressChartData = () => {
+    if (recentGoals.length === 0) {
+      return {
+        labels: [],
+        data: []
+      };
+    }
+
+    const labels = recentGoals.map(goal => goal.title.substring(0, 10) + (goal.title.length > 10 ? '...' : ''));
+    const data = recentGoals.map(goal => {
+      // Eğer goal tamamlanmışsa 1.0, değilse 0.0-1.0 arası bir değer
+      if (goal.isCompleted) return 1.0;
+      
+      // Tamamlanmamış hedefler için progress hesaplama
+      const createdAt = new Date(goal.createdAt);
+      const now = new Date();
+      const daysSinceCreation = Math.floor((now - createdAt) / (1000 * 60 * 60 * 24));
+      
+      // Varsayılan olarak %20 progress veriyoruz
+      return Math.min(0.2 + (daysSinceCreation * 0.05), 0.9);
+    });
+
+    return {
+      labels,
+      data
+    };
+  };
+
+  // Habits ProgressChart için veri hazırlama
+  const getHabitsProgressChartData = () => {
+    if (recentHabits.length === 0) {
+      return {
+        labels: [],
+        data: []
+      };
+    }
+
+    const labels = recentHabits.map(habit => habit.title.substring(0, 10) + (habit.title.length > 10 ? '...' : ''));
+    const data = recentHabits.map(habit => {
+      // Alışkanlık için tamamlanma oranını hesaplama
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      
+      // Bugün tamamlanmış mı kontrol et
+      const completedToday = habit.completedDates.some(date => {
+        const completedDate = new Date(date);
+        completedDate.setHours(0, 0, 0, 0);
+        return completedDate.getTime() === today.getTime();
+      });
+
+      if (completedToday) return 1.0;
+      
+      // Tamamlanmamış alışkanlıklar için progress hesaplama
+      const createdAt = new Date(habit.createdAt);
+      const daysSinceCreation = Math.floor((today - createdAt) / (1000 * 60 * 60 * 24));
+      
+      // Toplam tamamlanma sayısına göre progress
+      const completionRate = habit.completedDates.length / Math.max(daysSinceCreation, 1);
+      return Math.min(completionRate, 0.9);
+    });
+
+    return {
+      labels,
+      data
+    };
   };
 
   const handleUpdateGoal = (goal) => {
@@ -218,14 +289,96 @@ const DashboardScreen = ({ navigation }) => {
       <View style={styles.statsContainer}>
         <View style={styles.statCard}>
           <Text style={styles.statNumber}>{stats.totalGoals}</Text>
-          <Text style={styles.statLabel}>{t('total_goals', { ns: 'goals' })}</Text>
+          <Text style={styles.statLabel}>{t('total_goals')}</Text>
           <Text style={styles.statSubtext}>{getCompletionRate()}% {t('completed')}</Text>
         </View>
         
         <View style={styles.statCard}>
           <Text style={styles.statNumber}>{stats.totalHabits}</Text>
-          <Text style={styles.statLabel}>{t('active_habits', { ns: 'habits' })}</Text>
+          <Text style={styles.statLabel}>{t('active_habits')}</Text>
           <Text style={styles.statSubtext}>{getHabitCompletionRate()}% {t('today')}</Text>
+        </View>
+      </View>
+
+      {/* Progress Charts */}
+      <View style={styles.section}>
+        <Text style={styles.sectionTitle}>{t('progress_overview')}</Text>
+        <View style={styles.chartsContainer}>
+          {/* Goals Progress Chart */}
+          <View style={styles.chartWrapper}>
+            <Text style={styles.chartTitle}>{t('goals_progress')}</Text>
+            <View style={styles.progressContainer}>
+              {getGoalsProgressChartData().data.length > 0 ? (
+                <ProgressChart
+                  data={getGoalsProgressChartData()}
+                  width={(width - 60) / 2}
+                  height={180}
+                  strokeWidth={12}
+                  radius={24}
+                  chartConfig={{
+                    backgroundColor: '#ffffff',
+                    backgroundGradientFrom: '#ffffff',
+                    backgroundGradientTo: '#ffffff',
+                    color: (opacity = 1) => `rgba(76, 175, 80, ${opacity})`,
+                    labelColor: (opacity = 1) => `rgba(0, 0, 0, ${opacity})`,
+                    strokeWidth: 2,
+                    barPercentage: 0.5,
+                    useShadowColorFromDataset: false,
+                  }}
+                  hideLegend={false}
+                  withCustomBarColorFromDataset={true}
+                  withInnerRadius={true}
+                  withVerticalLabels={true}
+                  withHorizontalLabels={true}
+                  withDots={true}
+                  segments={4}
+                />
+              ) : (
+                <View style={styles.emptyChartContainer}>
+                  <Ionicons name="flag-outline" size={32} color="#ccc" />
+                  <Text style={styles.emptyChartText}>{t('no_goals_for_progress')}</Text>
+                </View>
+              )}
+            </View>
+          </View>
+
+          {/* Habits Progress Chart */}
+          <View style={styles.chartWrapper}>
+            <Text style={styles.chartTitle}>{t('habits_progress')}</Text>
+            <View style={styles.progressContainer}>
+              {getHabitsProgressChartData().data.length > 0 ? (
+                <ProgressChart
+                  data={getHabitsProgressChartData()}
+                  width={(width - 60) / 2}
+                  height={180}
+                  strokeWidth={12}
+                  radius={24}
+                  chartConfig={{
+                    backgroundColor: '#ffffff',
+                    backgroundGradientFrom: '#ffffff',
+                    backgroundGradientTo: '#ffffff',
+                    color: (opacity = 1) => `rgba(33, 150, 243, ${opacity})`,
+                    labelColor: (opacity = 1) => `rgba(0, 0, 0, ${opacity})`,
+                    strokeWidth: 2,
+                    barPercentage: 0.5,
+                    useShadowColorFromDataset: false,
+                  }}
+                  hideLegend={false}
+                  withCustomBarColorFromDataset={true}
+                  withInnerRadius={true}
+                  withVerticalLabels={true}
+                  withHorizontalLabels={true}
+                  withDots={true}
+                  segments={4}
+                />
+              ) : (
+                <View style={styles.emptyChartContainer}>
+                  <Ionicons name="leaf-outline" size={32} color="#ccc" />
+                  <Text style={styles.emptyChartText}>{t('no_habits_for_progress')}</Text>
+                </View>
+              )}
+            </View>
+          </View>
         </View>
       </View>
 
@@ -252,7 +405,7 @@ const DashboardScreen = ({ navigation }) => {
       {/* Recent Goals */}
       <View style={styles.section}>
         <View style={styles.sectionHeader}>
-          <Text style={styles.sectionTitle}>{t('recent_goals', { ns: 'goals' })}</Text>
+          <Text style={styles.sectionTitle}>{t('recent_goals')}</Text>
           <TouchableOpacity onPress={() => navigation.navigate('Goals')}>
             <Text style={styles.seeAllText}>{t('see_all')}</Text>
           </TouchableOpacity>
@@ -296,7 +449,7 @@ const DashboardScreen = ({ navigation }) => {
       {/* Recent Habits */}
       <View style={styles.section}>
         <View style={styles.sectionHeader}>
-          <Text style={styles.sectionTitle}>{t('recent_habits', { ns: 'habits' })}</Text>
+          <Text style={styles.sectionTitle}>{t('recent_habits')}</Text>
           <TouchableOpacity onPress={() => navigation.navigate('Habits')}>
             <Text style={styles.seeAllText}>{t('see_all')}</Text>
           </TouchableOpacity>
@@ -323,7 +476,7 @@ const DashboardScreen = ({ navigation }) => {
                 </View>
               </View>
               <Text style={styles.itemSubtext}>
-                {habit.completedDates.length} {t('times_completed', { ns: 'habits' })}
+                {habit.completedDates.length} {t('times_completed')}
               </Text>
               <Text style={styles.itemDate}>
                 {new Date(habit.createdAt).toLocaleDateString()}
@@ -511,6 +664,43 @@ const styles = StyleSheet.create({
   },
   bottomSpacing: {
     height: 20,
+  },
+  chartsContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginTop: 10,
+  },
+  chartWrapper: {
+    flex: 1,
+    marginHorizontal: 5,
+  },
+  chartTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#333',
+    textAlign: 'center',
+    marginBottom: 10,
+  },
+  progressContainer: {
+    backgroundColor: 'white',
+    borderRadius: 12,
+    padding: 10,
+    boxShadow: '0px 2px 4px rgba(0, 0, 0, 0.1)',
+    elevation: 3,
+    alignItems: 'center',
+  },
+  emptyChartContainer: {
+    height: 180,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#f8f9fa',
+    borderRadius: 12,
+  },
+  emptyChartText: {
+    marginTop: 8,
+    fontSize: 12,
+    color: '#999',
+    textAlign: 'center',
   },
   fab: {
     position: 'absolute',

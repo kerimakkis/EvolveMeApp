@@ -47,5 +47,12 @@
   "active_habits": "Aktif Alışkanlıklar",
   "recent_goals": "Son Hedefler",
   "recent_habits": "Son Alışkanlıklar",
-  "times_completed": "kez tamamlandı"
+  "times_completed": "kez tamamlandı",
+  "progress_overview": "İlerleme Özeti",
+  "goals": "Hedefler",
+  "habits": "Alışkanlıklar",
+  "goals_progress": "Hedef İlerlemesi",
+  "habits_progress": "Alışkanlık İlerlemesi",
+  "no_goals_for_progress": "İlerleme grafiği için hedef bulunamadı",
+  "no_habits_for_progress": "İlerleme grafiği için alışkanlık bulunamadı"
 } 

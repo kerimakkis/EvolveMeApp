@@ -47,5 +47,12 @@
   "active_habits": "Active Habits",
   "recent_goals": "Recent Goals",
   "recent_habits": "Recent Habits",
-  "times_completed": "times completed"
+  "times_completed": "times completed",
+  "progress_overview": "Progress Overview",
+  "goals": "Goals",
+  "habits": "Habits",
+  "goals_progress": "Goals Progress",
+  "habits_progress": "Habits Progress",
+  "no_goals_for_progress": "No goals available for progress chart",
+  "no_habits_for_progress": "No habits available for progress chart"
 } 

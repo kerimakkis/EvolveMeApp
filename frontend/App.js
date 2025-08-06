@@ -85,6 +85,11 @@ const AppContent = () => {
 
   return (
     <NavigationContainer
+      theme={{
+        colors: {
+          background: 'transparent',
+        },
+      }}
       onStateChange={(state) => {
         // Handle navigation state changes silently
         console.log('Navigation state changed');
